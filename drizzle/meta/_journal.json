@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1790050046050,
+      "tag": "0000_brief_luke_cage",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790081336698,
+      "tag": "0001_typical_sprite",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790097489661,
+      "tag": "0002_many_cyclops",
+      "breakpoints": true
+    }
+  ]
+}

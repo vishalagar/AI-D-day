@@ -1,26 +1,212 @@
+@import url("https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Black&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
 @import "tailwindcss";
 
+/*
+  This is a resistance war room run out of somebody's garage, not a utility
+  control centre. Manila envelope stock, risograph inks, one colour that no
+  real SCADA board would ever allow.
+
+  Signal colours: red is still running, green is handled, marigold is waiting
+  on the queue, and --pop is the wink — reserved for invitations, never data.
+*/
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --paper: #ece0c6;
+  --panel: #f8f1e1;
+  --ink: #1b1510;
+  --ink-dim: #6b5d4c;
+  --line: #1b1510;
+  --alert: #e03a10;
+  --ok: #00875a;
+  --watch: #e09000;
+  --pop: #ff2d78;
+  --grid-line: rgba(27, 21, 16, 0.07);
+  --shadow-color: #1b1510;
+}
+
+/* Dark: the same garage, lights off, inks glowing. */
+:root[data-theme="dark"] {
+  --paper: #17130f;
+  --panel: #241d16;
+  --ink: #f4e9d5;
+  --ink-dim: #a08e77;
+  --line: #52422f;
+  --alert: #ff5c30;
+  --ok: #2fd98f;
+  --watch: #ffc043;
+  --pop: #ff4d92;
+  --grid-line: rgba(244, 233, 213, 0.05);
+  --shadow-color: #000000;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-paper: var(--paper);
+  --color-panel: var(--panel);
+  --color-ink: var(--ink);
+  --color-ink-dim: var(--ink-dim);
+  --color-line: var(--line);
+  --color-alert: var(--alert);
+  --color-ok: var(--ok);
+  --color-watch: var(--watch);
+  --color-pop: var(--pop);
+  --font-display: "Archivo", "Helvetica Neue", sans-serif;
+  --font-poster: "Archivo Black", "Archivo", sans-serif;
+  --font-mono: "IBM Plex Mono", "Courier New", monospace;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-display);
+  /* Faint drafting-paper grid. Sits under everything, never reads as decoration. */
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Numbers only. Mono is here to keep digits aligned on a readout that
+   updates live, not as a stylistic tell on ordinary labels. */
+.figure {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Poster weight. The wordmark is the loudest thing in the header on purpose —
+   it's the only place the page gets to shout. */
+.wordmark {
+  font-family: var(--font-poster);
+  letter-spacing: -0.045em;
+}
+
+.poster {
+  font-family: var(--font-poster);
+  letter-spacing: -0.03em;
+}
+
+.hard-shadow {
+  box-shadow: 5px 5px 0 var(--shadow-color);
+}
+
+.hard-shadow-sm {
+  box-shadow: 3px 3px 0 var(--shadow-color);
+}
+
+.hard-border {
+  border: 2px solid var(--line);
+}
+
+/* Presses in rather than lifting — the panel is mounted to the board. */
+.pressable {
+  transition:
+    transform 90ms ease,
+    box-shadow 90ms ease;
+}
+
+.pressable:hover:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+.pressable:active:not(:disabled) {
+  transform: translate(4px, 4px);
+}
+
+:where(a, button, input, textarea, [tabindex]):focus-visible {
+  outline: 3px solid var(--watch);
+  outline-offset: 2px;
+}
+
+/* Night-ops basemap: invert the light basemap tiles rather than depend on a
+   separate dark tile provider (the free keyless ones keep disappearing).
+   Scoped to the tile pane so our own signal-coloured pins stay true.
+   saturate() is doing real work — inverting the basemap's beige landmass
+   lands on a strong olive, and pulling the saturation down first keeps the
+   result a neutral console grey. */
+:root[data-theme="dark"] .map-canvas .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) saturate(0.45) brightness(0.88)
+    contrast(0.95);
+}
+
+/* Doubled-up selector for specificity: MapCanvas imports leaflet.css from
+   inside the component, so it lands after this file and its default
+   `background:#ddd` otherwise wins — which showed as a light grey band
+   above the map, jarring in dark mode and looking like broken tiles. */
+.leaflet-container.map-canvas,
+.map-canvas.leaflet-container {
+  background: var(--paper);
+  font-family: var(--font-display);
+}
+
+/* The single orchestrated moment: a site the community just confirmed
+   arriving on the board. Motion answers the vote that caused it. */
+@keyframes energize {
+  0% {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+  55% {
+    transform: scale(1.6);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.site-pin--arriving {
+  animation: energize 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* The welcome card landing on the board. It overshoots and settles, like
+   something dropped on a desk rather than faded in. */
+@keyframes slam {
+  0% {
+    transform: translateY(-18px) scale(0.96);
+    opacity: 0;
+  }
+  60% {
+    transform: translateY(4px) scale(1.01);
+    opacity: 1;
+  }
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.slam-in {
+  animation: slam 360ms cubic-bezier(0.2, 1.1, 0.4, 1) both;
+}
+
+/* The verdict landing on the result card a beat after the card itself —
+   the rubber stamp coming down on the file. */
+@keyframes stamp {
+  0% {
+    transform: rotate(7deg) scale(2.4);
+    opacity: 0;
+  }
+  70% {
+    transform: rotate(7deg) scale(0.94);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(7deg) scale(1);
+    opacity: 1;
+  }
+}
+
+.stamp-in {
+  animation: stamp 280ms cubic-bezier(0.3, 1.4, 0.5, 1) 380ms both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pressable,
+  .site-pin--arriving,
+  .slam-in,
+  .stamp-in {
+    transition: none;
+    animation: none;
+  }
 }
